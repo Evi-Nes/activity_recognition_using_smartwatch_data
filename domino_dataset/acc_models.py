@@ -391,6 +391,7 @@ if __name__ == '__main__':
     class_labels = ['Brushing teeth', 'Cycling', 'Lying', 'Moving by car', 'Running', 'Sitting', 'Stairs', 'Standing', 'Walking']
 
     # plot_data_distribution(path)
+
     train_set, test_set, unique_activities = train_test_split(path)
     X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
 
