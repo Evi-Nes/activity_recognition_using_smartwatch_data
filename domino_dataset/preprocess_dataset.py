@@ -14,7 +14,6 @@ def generate_time_range(ts_start, ts_end):
     return time_range
 
 
-# List to keep track of merged file paths
 merged_files = []
 
 
@@ -45,7 +44,6 @@ for folder in tqdm(os.listdir(domino_folder)):
                 })
                 expanded_data.append(expanded_df)
 
-            # Concatenate all the expanded dataframes into one
             activity_labels_ts = pd.concat(expanded_data, ignore_index=True)
 
             # Save the expanded data as activity_labels_ts.csv
@@ -60,7 +58,6 @@ for folder in tqdm(os.listdir(domino_folder)):
                 smartwatch_acc.rename(columns={'x': 'acc_x', 'y': 'acc_y', 'z': 'acc_z'}, inplace=True)
                 smartwatch_gyro.rename(columns={'x': 'gyro_x', 'y': 'gyro_y', 'z': 'gyro_z'}, inplace=True)
 
-                # Merge the activity_labels_ts with smartwatch_acc and smartwatch_gyro on 'ts'
                 merged_data = activity_labels_ts.merge(smartwatch_acc, on='ts', how='inner')
                 merged_data = merged_data.merge(smartwatch_gyro, on='ts', how='inner')
 
@@ -78,12 +75,10 @@ for folder in tqdm(os.listdir(domino_folder)):
 if merged_files:
     all_data = []
 
-    # Read and append all the individual user files
     for file in merged_files:
         df = pd.read_csv(file)
         all_data.append(df)
 
-    # Concatenate all user dataframes
     if all_data:
         combined_df = pd.concat(all_data, ignore_index=True)
         combined_file_path = os.path.join(domino_folder, 'data.csv')

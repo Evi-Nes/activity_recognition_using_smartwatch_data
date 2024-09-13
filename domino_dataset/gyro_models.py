@@ -387,14 +387,13 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "data.csv"
+    path = "DOMINO/data.csv"
     class_labels = ['Brushing teeth', 'Cycling', 'Lying', 'Moving by car', 'Running', 'Sitting', 'Stairs', 'Standing', 'Walking']
 
     # plot_data_distribution(path)
 
     # Choose the model
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
-    models = models[0]
 
     for chosen_model in models:
         print(f'{chosen_model=}')

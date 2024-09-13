@@ -387,7 +387,7 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "data.csv"
+    path = "DOMINO/data.csv"
     class_labels = ['Brushing teeth', 'Cycling', 'Lying', 'Moving by car', 'Running', 'Sitting', 'Stairs', 'Standing', 'Walking']
 
     # plot_data_distribution(path)
