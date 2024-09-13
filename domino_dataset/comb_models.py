@@ -392,9 +392,6 @@ if __name__ == '__main__':
 
     # plot_data_distribution(path)
 
-    train_set, test_set, unique_activities = train_test_split(path)
-    X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
-
     # Choose the model
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
 
@@ -405,6 +402,8 @@ if __name__ == '__main__':
             X_train, y_train, X_test, y_test = extract_features(path, frequency, samples_required, train_features=False)
             y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
         else:
+            train_set, test_set, unique_activities = train_test_split(path)
+            X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
             y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
 
         # Uncomment if you want to create the confusion matrices for the results
