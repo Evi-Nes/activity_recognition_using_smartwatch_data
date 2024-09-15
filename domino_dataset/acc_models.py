@@ -64,8 +64,8 @@ def create_sequences(X_data, Y_data, timesteps, unique_activities):
 
 def train_test_split(path):
     """
-    This function splits the data to train-test sets. After reading the csv file, it maps the activities to numbers, removes
-    some undesired activities, sets the frequency of the data to 25 Hz and creates the train and test sets.
+    This function splits the data to train-test sets. After reading the csv file, it maps the activities to numbers,
+    removes some undesired activities, sets the frequency of the data to 25 Hz and creates the train and test sets.
     :return: train_data, test_data, unique_activities
     """
     data = pd.read_csv(path)
@@ -119,9 +119,9 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     X_test = X_test[random]
     y_test = y_test[random]
 
-    for activity in unique_activities:
-        print(f'Train Activity {activity}: {len(y_train[y_train == activity])}')
-        print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
+    # for activity in unique_activities:
+    #     print(f'Train Activity {activity}: {len(y_train[y_train == activity])}')
+    #     print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
 
     hot_encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
     hot_encoder = hot_encoder.fit(y_train)
@@ -221,7 +221,7 @@ def create_sequential_model(X_train, y_train, chosen_model, input_shape, file_na
     return model
 
 
-def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model, frequency):
+def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, frequency, train_model):
     """
     This function is used to train the sequential models. If train_model == True, then it trains the model using
     X-train, y_train, else it loads the model from the existing file. Then, it evaluates the model and prints the
@@ -310,7 +310,7 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
     return X_train_features, y_train_features, X_test_features, y_test_features
 
 
-def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model, frequency):
+def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, frequency, train_model):
     """
     This function is used to train the models based on the extracted features. If train_model == True, then it trains
     the model using the features from the extract_features function, else it loads the model from the existing file.
@@ -347,7 +347,7 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
     return y_test, y_test_predict
 
 
-def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model):
+def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model, frequency):
     """
     This function plots the confusion matrices, visualising the results of the sequential models. Using the y_test_labels
     and y_pred_labels parameters, it creates and saves the confusion matrix.
@@ -359,10 +359,10 @@ def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_mod
     for norm_value in normalize_cm:
         if norm_value == 'true':
             format = '.2f'
-            plot_name = f'acc_{chosen_model}_cm_norm.png'
+            plot_name = f'acc_{chosen_model}_{frequency}_cm_norm.png'
         else:
             format = 'd'
-            plot_name = f'acc_{chosen_model}_cm.png'
+            plot_name = f'acc_{chosen_model}_{frequency}_cm.png'
 
         disp = ConfusionMatrixDisplay.from_predictions(
             y_test_labels, y_pred_labels,
@@ -394,17 +394,20 @@ if __name__ == '__main__':
 
     # Choose the model
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
+    models = models[0:2]
 
     for chosen_model in models:                
         print(f'{chosen_model=}')
         
         if chosen_model == 'rf' or chosen_model == 'knn':
             X_train, y_train, X_test, y_test = extract_features(path, frequency, samples_required, train_features=False)
-            y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
+            y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model,
+                                                               class_labels, frequency, train_model=False)
         else:
             train_set, test_set, unique_activities = train_test_split(path)
             X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
-            y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
+            y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
+                                                                  class_labels, frequency, train_model=True)
 
         # Uncomment if you want to create the confusion matrices for the results
-        # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
+        plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model, frequency)

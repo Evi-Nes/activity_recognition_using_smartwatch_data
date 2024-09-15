@@ -347,7 +347,7 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
     return y_test, y_test_predict
 
 
-def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model):
+def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model, frequency):
     """
     This function plots the confusion matrices, visualising the results of the sequential models. Using the y_test_labels
     and y_pred_labels parameters, it creates and saves the confusion matrix.
@@ -359,10 +359,10 @@ def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_mod
     for norm_value in normalize_cm:
         if norm_value == 'true':
             format = '.2f'
-            plot_name = f'comb_{chosen_model}_cm_norm.png'
+            plot_name = f'comb_{chosen_model}_{frequency}_cm_norm.png'
         else:
             format = 'd'
-            plot_name = f'comb_{chosen_model}_cm.png'
+            plot_name = f'comb_{chosen_model}_{frequency}_cm.png'
 
         disp = ConfusionMatrixDisplay.from_predictions(
             y_test_labels, y_pred_labels,
@@ -407,4 +407,4 @@ if __name__ == '__main__':
             y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
 
         # Uncomment if you want to create the confusion matrices for the results
-        # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
+        # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model, frequency)

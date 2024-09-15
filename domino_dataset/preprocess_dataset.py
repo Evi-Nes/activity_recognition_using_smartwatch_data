@@ -5,15 +5,6 @@ import re
 
 # Define the path to the DOMINO folder
 domino_folder = 'DOMINO'
-
-
-# Function to generate a list of timestamps from ts_start to ts_end (in milliseconds)
-def generate_time_range(ts_start, ts_end):
-    # Create a range of timestamps from ts_start to ts_end with 1 millisecond intervals
-    time_range = list(range(int(ts_start), int(ts_end) + 1, 1))  # Increment by 1 millisecond
-    return time_range
-
-
 merged_files = []
 
 
@@ -29,47 +20,37 @@ for folder in tqdm(os.listdir(domino_folder)):
         acc_path = os.path.join(folder_path, 'smartwatch_acc.csv')
         gyro_path = os.path.join(folder_path, 'smartwatch_gyr.csv')
 
-        # Step 1: Process activity_labels.csv
         if os.path.exists(activity_labels_path):
             activity_labels = pd.read_csv(activity_labels_path)
+            smartwatch_acc = pd.read_csv(acc_path)
+            smartwatch_gyro = pd.read_csv(gyro_path)
 
-            # Expand the time ranges between ts_start and ts_end, and keep the "label" column
-            expanded_data = []
-            for _, row in activity_labels.iterrows():
-                time_range = generate_time_range(row['ts_start'], row['ts_end'])
+            smartwatch_acc.rename(columns={'x': 'accel_x', 'y': 'accel_y', 'z': 'accel_z'}, inplace=True)
+            smartwatch_gyro.rename(columns={'x': 'gyro_x', 'y': 'gyro_y', 'z': 'gyro_z'}, inplace=True)
 
-                expanded_df = pd.DataFrame({
-                    'ts': time_range,
-                    'label': row['label']  # Keep the label column constant for each expanded range
-                })
-                expanded_data.append(expanded_df)
+            smartwatch_acc['key'] = 1
+            activity_labels['key'] = 1
+            cross_joined = pd.merge(smartwatch_acc, activity_labels, on='key').drop('key', axis=1)
 
-            activity_labels_ts = pd.concat(expanded_data, ignore_index=True)
+            # Filter to keep only the rows where ts is within the range [ts_start, ts_end]
+            result = cross_joined[(cross_joined['ts'] >= cross_joined['ts_start']) & (cross_joined['ts'] <= cross_joined['ts_end'])]
 
-            # Save the expanded data as activity_labels_ts.csv
-            activity_labels_ts_path = os.path.join(folder_path, 'activity_labels_ts.csv')
-            activity_labels_ts.to_csv(activity_labels_ts_path, index=False)
+            merged_data = pd.merge_asof(result, smartwatch_gyro, on='ts', direction='nearest', tolerance=5)
 
-            # Step 2: Load smartwatch_acc.csv and smartwatch_gyro.csv
-            if os.path.exists(acc_path) and os.path.exists(gyro_path):
-                smartwatch_acc = pd.read_csv(acc_path)
-                smartwatch_gyro = pd.read_csv(gyro_path)
+            # merged_data = merged_data.merge(smartwatch_gyro, on='ts', how='inner')
 
-                smartwatch_acc.rename(columns={'x': 'acc_x', 'y': 'acc_y', 'z': 'acc_z'}, inplace=True)
-                smartwatch_gyro.rename(columns={'x': 'gyro_x', 'y': 'gyro_y', 'z': 'gyro_z'}, inplace=True)
+            merged_data['user_id'] = user_id
+            merged_data.rename(columns={'ts': 'timestamp'}, inplace=True)
+            merged_data.rename(columns={'label': 'activity'}, inplace=True)
 
-                merged_data = activity_labels_ts.merge(smartwatch_acc, on='ts', how='inner')
-                merged_data = merged_data.merge(smartwatch_gyro, on='ts', how='inner')
+            merged_data = merged_data.drop('ts_start', axis=1)
+            merged_data = merged_data.drop('ts_end', axis=1)
 
-                merged_data['user_id'] = user_id
-                merged_data.rename(columns={'ts': 'timestamp'}, inplace=True)
+            merged_file_path = os.path.join(domino_folder, f'merged_user_{user_id}.csv')
+            merged_data.to_csv(merged_file_path, index=False)
+            print(f"Saved merged data for user {user_id} to {merged_file_path}")
 
-                # Step 3: Save the merged data for this user
-                merged_file_path = os.path.join(domino_folder, f'merged_user_{user_id}.csv')
-                merged_data.to_csv(merged_file_path, index=False)
-                print(f"Saved merged data for user {user_id} to {merged_file_path}")
-
-                merged_files.append(merged_file_path)
+            merged_files.append(merged_file_path)
 
 # Step 4: Combine all individual merged files into one final CSV file
 if merged_files:
