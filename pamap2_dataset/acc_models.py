@@ -64,26 +64,19 @@ def create_sequences(X_data, Y_data, timesteps, unique_activities):
 
 def train_test_split(path):
     """
-    This function splits the data to train-test sets. After reading the csv file, it maps the activities to numbers, removes
-    some undesired activities, sets the frequency of the data to 25 Hz and creates the train and test sets.
+    This function splits the data to train-test sets. After reading the csv file, it maps the activities to numbers,
+    removes some undesired activities, sets the frequency of the data to 25 Hz and creates the train and test sets.
     :return: train_data, test_data, unique_activities
     """
     data = pd.read_csv(path)
     data = data.drop(['timestamp'], axis=1)
-    data = data.drop(['user_id'], axis=1)
 
-    letter_to_number = {'BRUSHING_TEETH': 1, 'CYCLING': 2, 'ELEVATOR_DOWN': 3, 'ELEVATOR_UP': 4, 'LYING': 5,
-                        'MOVING_BY_CAR': 6, 'RUNNING': 7, 'SITTING': 8, 'SITTING_ON_TRANSPORT': 9, 'STAIRS_DOWN': 10,
-                        'STAIRS_UP': 11, 'STANDING': 12, 'STANDING_ON_TRANSPORT': 13, 'WALKING': 14, 'TRANSITION': 15}
-
-    data['activityId'] = data['activity'].map(letter_to_number)
-
-    undesired_activities = [3, 4, 9, 11, 13, 15]
+    undesired_activities = [0, 7, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 24]
     data = data[~data['activityId'].isin(undesired_activities)]
     unique_activities = data['activityId'].unique()
     data = data.iloc[::4, :]
 
-    columns_to_scale = ['gyro_x', 'gyro_y', 'gyro_z']
+    columns_to_scale = ['accel_x', 'accel_y', 'accel_z']
     scaler = RobustScaler()
     data[columns_to_scale] = scaler.fit_transform(data[columns_to_scale])
 
@@ -103,9 +96,9 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     the data using OneHotEncoder.
     :returns: the preprocessed data that can be used by the models (X_train, y_train, X_test, y_test)
     """
-    X_train, y_train = create_sequences(train_data[['gyro_x', 'gyro_y', 'gyro_z']], train_data['activityId'],
+    X_train, y_train = create_sequences(train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activityId'],
                                         timesteps, unique_activities)
-    X_test, y_test = create_sequences(test_data[['gyro_x', 'gyro_y', 'gyro_z']], test_data['activityId'],
+    X_test, y_test = create_sequences(test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activityId'],
                                       timesteps, unique_activities)
 
     np.random.seed(42)
@@ -119,9 +112,9 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     X_test = X_test[random]
     y_test = y_test[random]
 
-    for activity in unique_activities:
-        print(f'Train Activity {activity}: {len(y_train[y_train == activity])}')
-        print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
+    # for activity in unique_activities:
+    #     print(f'Train Activity {activity}: {len(y_train[y_train == activity])}')
+    #     print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
 
     hot_encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
     hot_encoder = hot_encoder.fit(y_train)
@@ -143,7 +136,7 @@ def display_data(data, unique_activities):
 
         subset.plot(subplots=True, figsize=(10, 10))
         plt.xlabel('Time')
-        plt.savefig(f'plots/gyro_scaled_data.png')
+        plt.savefig(f'plots/acc_scaled_data.png')
         plt.show()
 
 
@@ -231,7 +224,7 @@ def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class
     if not os.path.exists('saved_models'):
         os.makedirs('saved_models')
 
-    file_name = f'saved_models/gyro_{chosen_model}_model.h5'
+    file_name = f'saved_models/acc_{chosen_model}_model.h5'
 
     if train_model:
         input_shape = (X_train.shape[1], X_train.shape[2])
@@ -263,8 +256,8 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
     This function uses the tsfel package to extract statistical features from the data and preprocessed tha data.
     :returns: the extracted features (X_train_features, y_train_features, X_test_features, y_test_features)
     """
-    X_train_sig, y_train_sig = train_data[['gyro_x', 'gyro_y', 'gyro_z']], train_data['activityId']
-    X_test_sig, y_test_sig = test_data[['gyro_x', 'gyro_y', 'gyro_z']], test_data['activityId']
+    X_train_sig, y_train_sig = train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activityId']
+    X_test_sig, y_test_sig = test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activityId']
 
     if train_features:
         if not os.path.exists('saved_features'):
@@ -273,11 +266,11 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
         cfg_file = tsfel.get_features_by_domain('statistical')
         X_train_features = tsfel.time_series_features_extractor(cfg_file, X_train_sig, fs=frequency, window_size=samples_required)
         X_test_features = tsfel.time_series_features_extractor(cfg_file, X_test_sig, fs=frequency, window_size=samples_required)
-        X_train.to_csv(f'saved_features/X_train_gyro.csv', index=False)
-        X_test.to_csv(f'saved_features/X_test_gyro.csv', index=False)
+        X_train.to_csv(f'saved_features/X_train_acc.csv', index=False)
+        X_test.to_csv(f'saved_features/X_test_acc.csv', index=False)
     else:
-        X_train_features = pd.read_csv(f'saved_features/X_train_gyro.csv')
-        X_test_features = pd.read_csv(f'saved_features/X_test_gyro.csv')
+        X_train_features = pd.read_csv(f'saved_features/X_train_acc.csv')
+        X_test_features = pd.read_csv(f'saved_features/X_test_acc.csv')
 
     X_train_columns = X_train_features.copy(deep=True)
     y_train_features = y_train_sig[::samples_required]
@@ -324,10 +317,10 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
         elif chosen_model == 'knn':
             classifier = KNeighborsClassifier(n_neighbors=7, metric='manhattan', weights='uniform')
             classifier.fit(X_train, y_train.ravel())
-        file = open(f'models/gyro_{chosen_model}_model.pkl', 'wb')
+        file = open(f'models/acc_{chosen_model}_model.pkl', 'wb')
         pickle.dump(classifier, file)
     else:
-        file = open(f'models/gyro_{chosen_model}_model.pkl', 'rb')
+        file = open(f'models/acc_{chosen_model}_model.pkl', 'rb')
         classifier = pickle.load(file)
 
     classifier.fit(X_train, y_train.ravel())
@@ -359,10 +352,10 @@ def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_mod
     for norm_value in normalize_cm:
         if norm_value == 'true':
             format = '.2f'
-            plot_name = f'gyro_{chosen_model}_cm_norm.png'
+            plot_name = f'acc_{chosen_model}_cm_norm.png'
         else:
             format = 'd'
-            plot_name = f'gyro_{chosen_model}_cm.png'
+            plot_name = f'acc_{chosen_model}_cm.png'
 
         disp = ConfusionMatrixDisplay.from_predictions(
             y_test_labels, y_pred_labels,
@@ -387,24 +380,27 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "DOMINO/data.csv"
-    class_labels = ['Brushing teeth', 'Cycling', 'Lying', 'Moving by car', 'Running', 'Sitting', 'Stairs', 'Standing', 'Walking']
+    path = "Pamap/data.csv"
+    class_labels = ['lying', 'sitting', 'standing', 'walking', 'running', 'cycling']
 
     # plot_data_distribution(path)
 
     # Choose the model
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
+    models = models[0:2]
 
     for chosen_model in models:
         print(f'{chosen_model=}')
 
         if chosen_model == 'rf' or chosen_model == 'knn':
             X_train, y_train, X_test, y_test = extract_features(path, frequency, samples_required, train_features=False)
-            y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
+            y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model,
+                                                               class_labels, train_model=False)
         else:
             train_set, test_set, unique_activities = train_test_split(path)
             X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
-            y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model=False)
+            y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
+                                                                  class_labels, train_model=True)
 
         # Uncomment if you want to create the confusion matrices for the results
-        # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
+        plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)

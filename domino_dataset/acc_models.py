@@ -221,7 +221,7 @@ def create_sequential_model(X_train, y_train, chosen_model, input_shape, file_na
     return model
 
 
-def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, frequency, train_model):
+def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model):
     """
     This function is used to train the sequential models. If train_model == True, then it trains the model using
     X-train, y_train, else it loads the model from the existing file. Then, it evaluates the model and prints the
@@ -231,7 +231,7 @@ def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class
     if not os.path.exists('saved_models'):
         os.makedirs('saved_models')
 
-    file_name = f'saved_models/acc_{chosen_model}_{frequency}_model.h5'
+    file_name = f'saved_models/acc_{chosen_model}_model.h5'
    
     if train_model:
         input_shape = (X_train.shape[1], X_train.shape[2])
@@ -273,11 +273,11 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
         cfg_file = tsfel.get_features_by_domain('statistical')
         X_train_features = tsfel.time_series_features_extractor(cfg_file, X_train_sig, fs=frequency, window_size=samples_required)
         X_test_features = tsfel.time_series_features_extractor(cfg_file, X_test_sig, fs=frequency, window_size=samples_required)
-        X_train.to_csv(f'saved_features/X_train_acc_{frequency}.csv', index=False)
-        X_test.to_csv(f'saved_features/X_test_acc_{frequency}.csv', index=False)
+        X_train.to_csv(f'saved_features/X_train_acc.csv', index=False)
+        X_test.to_csv(f'saved_features/X_test_acc.csv', index=False)
     else:
-        X_train_features = pd.read_csv(f'saved_features/X_train_acc_{frequency}.csv')
-        X_test_features = pd.read_csv(f'saved_features/X_test_acc_{frequency}.csv')
+        X_train_features = pd.read_csv(f'saved_features/X_train_acc.csv')
+        X_test_features = pd.read_csv(f'saved_features/X_test_acc.csv')
 
     X_train_columns = X_train_features.copy(deep=True)
     y_train_features = y_train_sig[::samples_required]
@@ -310,7 +310,7 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
     return X_train_features, y_train_features, X_test_features, y_test_features
 
 
-def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, frequency, train_model):
+def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_labels, train_model):
     """
     This function is used to train the models based on the extracted features. If train_model == True, then it trains
     the model using the features from the extract_features function, else it loads the model from the existing file.
@@ -324,10 +324,10 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
         elif chosen_model == 'knn':
             classifier = KNeighborsClassifier(n_neighbors=7, metric='manhattan', weights='uniform')
             classifier.fit(X_train, y_train.ravel())
-        file = open(f'models/acc_{chosen_model}_{frequency}_model.pkl', 'wb')
+        file = open(f'models/acc_{chosen_model}_model.pkl', 'wb')
         pickle.dump(classifier, file)
     else:
-        file = open(f'models/acc_{chosen_model}_{frequency}_model.pkl', 'rb')
+        file = open(f'models/acc_{chosen_model}_model.pkl', 'rb')
         classifier = pickle.load(file)
 
     classifier.fit(X_train, y_train.ravel())
@@ -347,7 +347,7 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
     return y_test, y_test_predict
 
 
-def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model, frequency):
+def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model):
     """
     This function plots the confusion matrices, visualising the results of the sequential models. Using the y_test_labels
     and y_pred_labels parameters, it creates and saves the confusion matrix.
@@ -359,10 +359,10 @@ def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_mod
     for norm_value in normalize_cm:
         if norm_value == 'true':
             format = '.2f'
-            plot_name = f'acc_{chosen_model}_{frequency}_cm_norm.png'
+            plot_name = f'acc_{chosen_model}_cm_norm.png'
         else:
             format = 'd'
-            plot_name = f'acc_{chosen_model}_{frequency}_cm.png'
+            plot_name = f'acc_{chosen_model}_cm.png'
 
         disp = ConfusionMatrixDisplay.from_predictions(
             y_test_labels, y_pred_labels,
@@ -402,12 +402,12 @@ if __name__ == '__main__':
         if chosen_model == 'rf' or chosen_model == 'knn':
             X_train, y_train, X_test, y_test = extract_features(path, frequency, samples_required, train_features=False)
             y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                               class_labels, frequency, train_model=False)
+                                                               class_labels, train_model=False)
         else:
             train_set, test_set, unique_activities = train_test_split(path)
             X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
             y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                                  class_labels, frequency, train_model=True)
+                                                                  class_labels, train_model=True)
 
         # Uncomment if you want to create the confusion matrices for the results
-        plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model, frequency)
+        plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
