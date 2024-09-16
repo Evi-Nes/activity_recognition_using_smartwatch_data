@@ -38,5 +38,5 @@ combined_df.rename(columns={10: 'gyro_x'}, inplace=True)
 combined_df.rename(columns={11: 'gyro_y'}, inplace=True)
 combined_df.rename(columns={12: 'gyro_z'}, inplace=True)
 
-combined_df.to_csv('data.csv', index=False)
+combined_df.to_csv('data_pamap2.csv', index=False)
 print(combined_df.head())

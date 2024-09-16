@@ -380,7 +380,7 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "data.csv"
+    path = "data_pamap2.csv"
     class_labels = ['lying', 'sitting', 'standing', 'walking', 'running', 'cycling']
 
     # plot_data_distribution(path)

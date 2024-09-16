@@ -394,7 +394,7 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "data.csv"
+    path = "data_wisdm.csv"
     class_labels = ['walking', 'jogging', 'stairs', 'sitting', 'standing', 'brushing teeth', 'basketball', 'writing']
 
     # plot_data_distribution(path)

@@ -62,7 +62,7 @@ if merged_files:
 
     if all_data:
         combined_df = pd.concat(all_data, ignore_index=True)
-        combined_file_path = os.path.join(domino_folder, 'data.csv')
+        combined_file_path = os.path.join(domino_folder, 'data_domino.csv')
         combined_df.to_csv('data.csv', index=False)
         print(f"Saved final combined data to {combined_file_path}")
 
