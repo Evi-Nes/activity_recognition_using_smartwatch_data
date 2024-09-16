@@ -34,10 +34,10 @@ def plot_data_distribution(path):
                         'K': 11, 'L': 12, 'M': 13, 'O': 14, 'P': 15,
                         'Q': 16, 'R': 17, 'S': 18}
 
-    data['activityId'] = data['activity'].map(letter_to_number)
+    data['activity'] = data['activity'].map(letter_to_number)
 
     undesired_activities = [6, 8, 9, 10, 11, 12, 13, 14 , 17, 18]
-    data = data[~data['activityId'].isin(undesired_activities)]
+    data = data[~data['activity'].isin(undesired_activities)]
 
     class_counts = data['activity'].value_counts()
 
@@ -83,11 +83,11 @@ def train_test_split(path):
                         'K': 11, 'L': 12, 'M': 13, 'O': 14, 'P': 15,
                         'Q': 16, 'R': 17, 'S': 18}
 
-    data['activityId'] = data['activity'].map(letter_to_number)
+    data['activity'] = data['activity'].map(letter_to_number)
 
     undesired_activities = [6, 8, 9, 10, 11, 12, 13, 14, 17, 18]
-    data = data[~data['activityId'].isin(undesired_activities)]
-    unique_activities = data['activityId'].unique()
+    data = data[~data['activity'].isin(undesired_activities)]
+    unique_activities = data['activity'].unique()
     data = data.iloc[::4, :]
 
     columns_to_scale = ['accel_x', 'accel_y', 'accel_z']
@@ -126,9 +126,9 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     X_test = X_test[random]
     y_test = y_test[random]
 
-    # for activity in unique_activities:
-    #     print(f'Train Activity {activity}: {len(y_train[y_train == activity])}')
-    #     print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
+    for activity in unique_activities:
+        print(f'Train Activity {activity}: {len(y_train[y_train == activity])}')
+        # print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
 
     hot_encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
     hot_encoder = hot_encoder.fit(y_train)
