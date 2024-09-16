@@ -27,10 +27,17 @@ def plot_data_distribution(path):
     """
     data = pd.read_csv(path)
     data = data.drop(['timestamp'], axis=1)
+    data = data.drop(['user_id'], axis=1)
 
-    undesired_activities = ['ELEVATOR_DOWN', 'ELEVATOR_UP',  'SITTING_ON_TRANSPORT', 'STAIRS_UP', 'STANDING_ON_TRANSPORT', 'TRANSITION']
-    data = data[~data['activity'].isin(undesired_activities)]
-    data = data.iloc[::4, :]
+    letter_to_number = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5,
+                        'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10,
+                        'K': 11, 'L': 12, 'M': 13, 'O': 14, 'P': 15,
+                        'Q': 16, 'R': 17, 'S': 18}
+
+    data['activityId'] = data['activity'].map(letter_to_number)
+
+    undesired_activities = [6, 8, 9, 10, 11, 12, 13, 14 , 17, 18]
+    data = data[~data['activityId'].isin(undesired_activities)]
 
     class_counts = data['activity'].value_counts()
 
@@ -69,11 +76,18 @@ def train_test_split(path):
     """
     data = pd.read_csv(path)
     data = data.drop(['timestamp'], axis=1)
+    data = data.drop(['user_id'], axis=1)
 
-    undesired_activities = [0, 7, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 24]
-    data = data[~data['activity'].isin(undesired_activities)]
-    data = data.dropna()
-    unique_activities = data['activity'].unique()
+    letter_to_number = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5,
+                        'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10,
+                        'K': 11, 'L': 12, 'M': 13, 'O': 14, 'P': 15,
+                        'Q': 16, 'R': 17, 'S': 18}
+
+    data['activityId'] = data['activity'].map(letter_to_number)
+
+    undesired_activities = [6, 8, 9, 10, 11, 12, 13, 14 , 17, 18]
+    data = data[~data['activityId'].isin(undesired_activities)]
+    unique_activities = data['activityId'].unique()
     data = data.iloc[::4, :]
 
     columns_to_scale = ['accel_x', 'accel_y', 'accel_z']
@@ -376,12 +390,12 @@ def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_mod
 
 
 if __name__ == '__main__':
-    frequency = 25
+    frequency = 20
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "data.csv"
-    class_labels = ['lying', 'sitting', 'standing', 'walking', 'running', 'cycling']
+    path = "wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset/data.csv"
+    class_labels = ['walking', 'jogging', 'stairs', 'sitting', 'standing', 'brushing teeth', 'basketball', 'writing']
 
     # plot_data_distribution(path)
 
