@@ -85,7 +85,7 @@ def train_test_split(path):
 
     data['activityId'] = data['activity'].map(letter_to_number)
 
-    undesired_activities = [6, 8, 9, 10, 11, 12, 13, 14 , 17, 18]
+    undesired_activities = [6, 8, 9, 10, 11, 12, 13, 14, 17, 18]
     data = data[~data['activityId'].isin(undesired_activities)]
     unique_activities = data['activityId'].unique()
     data = data.iloc[::4, :]
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset/data.csv"
+    path = "data.csv"
     class_labels = ['walking', 'jogging', 'stairs', 'sitting', 'standing', 'brushing teeth', 'basketball', 'writing']
 
     # plot_data_distribution(path)
