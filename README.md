@@ -19,6 +19,11 @@ and therefore we can't shuffle them or discover any temporal dependencies.
 
 
 In order to run the files, you need to download the project, go to the desired folder and read the instructions there. You should 
-run each file through its folder so as to not mess with the given paths. Before running the files make sure you have 
-all the necessary requirements.
+run each file via terminal from its folder so as to not mess with the given paths. Before running the files make sure you have 
+all the necessary requirements. For example:
+```azure
+cd domino_dataset
+python preprocess_dataset.py
+```
+
 

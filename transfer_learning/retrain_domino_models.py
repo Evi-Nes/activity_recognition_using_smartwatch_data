@@ -258,7 +258,7 @@ if __name__ == '__main__':
     path = "../pamap2_dataset/data.csv"
     class_labels = ['Cycling', 'Lying', 'Running', 'Sitting', 'Standing', 'Walking']
 
-    models = ['lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru']
+    models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru']
     models = models[0:2]
 
     train_set, test_set, unique_activities = train_test_split(path)
