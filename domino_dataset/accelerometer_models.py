@@ -25,6 +25,9 @@ def plot_data_distribution(path):
     """
     This function plots the number of instances per activity (the distribution of the data).
     """
+    if not os.path.exists('plots'):
+        os.makedirs('plots')
+
     data = pd.read_csv(path)
     data = data.drop(['timestamp'], axis=1)
     data = data.drop(['user_id'], axis=1)
@@ -135,6 +138,9 @@ def display_data(data, unique_activities):
     """
     This function plots subsets of the data as timeseries, to visualize the form of the data.
     """
+    if not os.path.exists('plots'):
+        os.makedirs('plots')
+
     for activity in unique_activities:
 
         subset = data[data['activityId'] == activity].iloc[200:400]
@@ -263,8 +269,8 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
     This function uses the tsfel package to extract statistical features from the data and preprocessed tha data.
     :returns: the extracted features (X_train_features, y_train_features, X_test_features, y_test_features)
     """
-    X_train_sig, y_train_sig = train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activityId']
-    X_test_sig, y_test_sig = test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activityId']
+    X_train_sig, y_train_sig = train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activity']
+    X_test_sig, y_test_sig = test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activity']
 
     if train_features:
         if not os.path.exists('saved_features'):
@@ -273,8 +279,8 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
         cfg_file = tsfel.get_features_by_domain('statistical')
         X_train_features = tsfel.time_series_features_extractor(cfg_file, X_train_sig, fs=frequency, window_size=samples_required)
         X_test_features = tsfel.time_series_features_extractor(cfg_file, X_test_sig, fs=frequency, window_size=samples_required)
-        X_train.to_csv(f'saved_features/X_train_acc.csv', index=False)
-        X_test.to_csv(f'saved_features/X_test_acc.csv', index=False)
+        X_train_features.to_csv(f'saved_features/X_train_acc.csv', index=False)
+        X_test_features.to_csv(f'saved_features/X_test_acc.csv', index=False)
     else:
         X_train_features = pd.read_csv(f'saved_features/X_train_acc.csv')
         X_test_features = pd.read_csv(f'saved_features/X_test_acc.csv')
@@ -324,10 +330,11 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
         elif chosen_model == 'knn':
             classifier = KNeighborsClassifier(n_neighbors=7, metric='manhattan', weights='uniform')
             classifier.fit(X_train, y_train.ravel())
-        file = open(f'models/acc_{chosen_model}_model.pkl', 'wb')
+
+        file = open(f'saved_models/acc_{chosen_model}_model.pkl', 'wb')
         pickle.dump(classifier, file)
     else:
-        file = open(f'models/acc_{chosen_model}_model.pkl', 'rb')
+        file = open(f'saved_models/acc_{chosen_model}_model.pkl', 'rb')
         classifier = pickle.load(file)
 
     classifier.fit(X_train, y_train.ravel())
@@ -392,22 +399,20 @@ if __name__ == '__main__':
 
     # plot_data_distribution(path)
 
-    # Choose the model
+    # Implemented models
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
-    models = models[0:2]
 
-    for chosen_model in models:                
+    for chosen_model in models:
         print(f'{chosen_model=}')
-        
+        train_set, test_set, unique_activities = train_test_split(path)
+
         if chosen_model == 'rf' or chosen_model == 'knn':
-            X_train, y_train, X_test, y_test = extract_features(path, frequency, samples_required, train_features=False)
+            X_train, y_train, X_test, y_test = extract_features(train_set, test_set, frequency, samples_required, train_features=True)
             y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                               class_labels, train_model=False)
+                                                               class_labels, train_model=True)
         else:
-            train_set, test_set, unique_activities = train_test_split(path)
             X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
             y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
                                                                   class_labels, train_model=True)
 
-        # Uncomment if you want to create the confusion matrices for the results
         plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
