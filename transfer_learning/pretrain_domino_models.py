@@ -5,7 +5,6 @@ import keras
 import os
 import contextlib
 import pickle
-import tsfel
 
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -13,8 +12,6 @@ from keras.src.layers import MaxPooling1D, Conv1D
 
 from sklearn.feature_selection import VarianceThreshold
 from sklearn import preprocessing
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
 
 # Redirect stderr to /dev/null to silence warnings
 devnull = open(os.devnull, 'w')
