@@ -87,7 +87,7 @@ def preprocess_data(test_data, timesteps, unique_activities):
     #     print(f'Test Activity {activity}: {len(y_test[y_test == activity])}')
 
     hot_encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
-    hot_encoder = hot_encoder.fit(y_train)
+    hot_encoder = hot_encoder.fit(y_test)
     y_test = hot_encoder.transform(y_test)
 
     return X_test, y_test
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         print(f'{chosen_model=}')
 
         test_set, unique_activities = train_test_split(path)
-        X_train, y_train, X_test, y_test = preprocess_data(test_set, samples_required, unique_activities)
+        X_test, y_test = preprocess_data(test_set, samples_required, unique_activities)
         y_test_labels, y_pred_labels = train_sequential_model(X_test, y_test, chosen_model, class_labels)
 
         # Uncomment if you want to create the confusion matrices for the results

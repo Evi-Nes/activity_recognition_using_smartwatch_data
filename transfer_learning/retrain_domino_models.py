@@ -4,14 +4,12 @@ import matplotlib.pyplot as plt
 import keras
 import os
 import contextlib
-import pickle
 
+from keras import Model
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
-from keras.src.layers import MaxPooling1D, Conv1D
+from keras.src.layers import MaxPooling1D, Conv1D, Dense
 
-from sklearn.feature_selection import VarianceThreshold
-from sklearn import preprocessing
 from tensorflow.keras.models import load_model
 
 
@@ -60,19 +58,19 @@ def train_test_split(path):
     train_data = data.iloc[0:int(size*0.8)]
     test_data = data.iloc[int(size*0.8):]
 
-    train_data['activityId'] = pd.Categorical(train_data['activityId'], categories=[6, 1, 5, 2, 3, 4], ordered=True)
-    train_data = train_data.sort_values(by='activityId')
+    train_data['activity'] = pd.Categorical(train_data['activity'], categories=[6, 1, 5, 2, 3, 4], ordered=True)
+    train_data = train_data.sort_values(by='activity')
 
     number_to_number = {6: 1, 1: 2, 5: 3, 2: 4, 3: 5, 4: 6}
-    train_data['activityId'] = train_data['activityId'].map(number_to_number)
+    train_data['activity'] = train_data['activity'].map(number_to_number)
 
-    test_data['activityId'] = pd.Categorical(test_data['activityId'], categories=[6, 1, 5, 2, 3, 4], ordered=True)
-    test_data = test_data.sort_values(by='activityId')
+    test_data['activity'] = pd.Categorical(test_data['activity'], categories=[6, 1, 5, 2, 3, 4], ordered=True)
+    test_data = test_data.sort_values(by='activity')
 
     number_to_number = {6: 1, 1: 2, 5: 3, 2: 4, 3: 5, 4: 6}
-    test_data['activityId'] = test_data['activityId'].map(number_to_number)
+    test_data['activity'] = test_data['activity'].map(number_to_number)
 
-    unique_activities = test_data['activityId'].unique()
+    unique_activities = test_data['activity'].unique()
 
     return train_data, test_data, unique_activities
 
@@ -111,97 +109,130 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     return X_train, y_train, X_test, y_test
 
 
-def create_sequential_model(X_train, y_train, chosen_model, input_shape, file_name):
-    """
-    This function is used to create the sequential models. Given the chosen_model param, it chooses the appropriate
-    structure and then compiles the model.
-    :return: the chosen sequential model
-    """
-    model = keras.Sequential()
-    if chosen_model == 'lstm_1':
-        model.add(keras.layers.LSTM(units=64, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.3))
-    elif chosen_model == 'gru_1':
-        model.add(keras.layers.GRU(units=64, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.3))
-    elif chosen_model == 'lstm_2':
-        model.add(keras.layers.LSTM(units=64, return_sequences=True, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-        model.add(keras.layers.LSTM(units=32, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.3))
-    elif chosen_model == 'gru_2':
-        model.add(keras.layers.GRU(units=64, return_sequences=True, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-        model.add(keras.layers.GRU(units=32, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.3))
-    elif chosen_model == 'cnn_lstm':
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(MaxPooling1D(pool_size=4))
-        model.add(keras.layers.LSTM(units=32, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == 'cnn_gru':
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(MaxPooling1D(pool_size=4))
-        model.add(keras.layers.GRU(units=32, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == 'cnn_cnn_lstm':
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=4))
-        model.add(keras.layers.LSTM(units=64, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == 'cnn_cnn_gru':
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=4))
-        model.add(keras.layers.GRU(units=64, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == 'cnn_cnn':
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=4))
-        model.add(keras.layers.Dropout(rate=0.4))
-        model.add(keras.layers.Flatten())
-        model.add(keras.layers.Dense(64, activation='relu'))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == '2cnn_2cnn':
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=2))
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu'))
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=2))
-        model.add(keras.layers.Dropout(rate=0.4))
-        model.add(keras.layers.Flatten())
-        model.add(keras.layers.Dense(64, activation='relu'))
-        model.add(keras.layers.Dropout(rate=0.4))
+# def create_sequential_model(X_train, y_train, chosen_model, input_shape, file_name):
+#     """
+#     This function is used to create the sequential models. Given the chosen_model param, it chooses the appropriate
+#     structure and then compiles the model.
+#     :return: the chosen sequential model
+#     """
+#     model = keras.Sequential()
+#     if chosen_model == 'lstm_1':
+#         model.add(keras.layers.LSTM(units=64, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.3))
+#     elif chosen_model == 'gru_1':
+#         model.add(keras.layers.GRU(units=64, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.3))
+#     elif chosen_model == 'lstm_2':
+#         model.add(keras.layers.LSTM(units=64, return_sequences=True, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#         model.add(keras.layers.LSTM(units=32, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.3))
+#     elif chosen_model == 'gru_2':
+#         model.add(keras.layers.GRU(units=64, return_sequences=True, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#         model.add(keras.layers.GRU(units=32, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.3))
+#     elif chosen_model == 'cnn_lstm':
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
+#         model.add(MaxPooling1D(pool_size=4))
+#         model.add(keras.layers.LSTM(units=32, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#     elif chosen_model == 'cnn_gru':
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
+#         model.add(MaxPooling1D(pool_size=4))
+#         model.add(keras.layers.GRU(units=32, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#     elif chosen_model == 'cnn_cnn_lstm':
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
+#         model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
+#         model.add(MaxPooling1D(pool_size=4))
+#         model.add(keras.layers.LSTM(units=64, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#     elif chosen_model == 'cnn_cnn_gru':
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
+#         model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
+#         model.add(MaxPooling1D(pool_size=4))
+#         model.add(keras.layers.GRU(units=64, return_sequences=False, input_shape=input_shape))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#     elif chosen_model == 'cnn_cnn':
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
+#         model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
+#         model.add(MaxPooling1D(pool_size=4))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#         model.add(keras.layers.Flatten())
+#         model.add(keras.layers.Dense(64, activation='relu'))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#     elif chosen_model == '2cnn_2cnn':
+#         model.add(Conv1D(filters=32, kernel_size=11, activation='relu', input_shape=input_shape))
+#         model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
+#         model.add(MaxPooling1D(pool_size=2))
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu'))
+#         model.add(Conv1D(filters=64, kernel_size=11, activation='relu'))
+#         model.add(MaxPooling1D(pool_size=2))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#         model.add(keras.layers.Flatten())
+#         model.add(keras.layers.Dense(64, activation='relu'))
+#         model.add(keras.layers.Dropout(rate=0.4))
+#
+#     model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
+#     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+#
+#     model.fit(X_train, y_train, epochs=60, batch_size=32, validation_split=0.3, verbose=2)
+#     model.save("acc_retrain")
+#
+#     return model
+#
 
-    model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+# def train_sequential_model(X_test, y_test, chosen_model, class_labels):
+#     """
+#     This function is used to train the sequential models. If train_model == True, then it trains the model using
+#     X-train, y_train, else it loads the model from the existing file. Then, it evaluates the model and prints the
+#     classification report.
+#     :return: y_test_labels, y_pred_labels containing the actual y_labels of test set and the predicted ones.
+#     """
+#     if not os.path.exists('saved_models'):
+#         os.makedirs('saved_models')
+#
+#     file_name = f'saved_models/acc_domino_{chosen_model}_model.h5'
+#
+#     model = keras.models.load_model(file_name)
+#
+#     # print(model.summary())
+#
+#     y_pred = model.predict(X_test)
+#     y_pred_labels = np.argmax(y_pred, axis=1)
+#     y_test_labels = np.argmax(y_test, axis=1)
+#     accuracy = accuracy_score(y_test_labels, y_pred_labels)
+#     f1 = f1_score(y_test_labels, y_pred_labels, average='weighted')
+#     print("Test Accuracy: %d%%" % (100*accuracy))
+#     print("Test F1 Score: %d%%" % (100*f1))
+#
+#     report = classification_report(y_test_labels, y_pred_labels, target_names=class_labels)
+#     print(report)
 
-    model.fit(X_train, y_train, epochs=60, batch_size=32, validation_split=0.3, verbose=2)
-    model.save(file_name)
-
-    return model
+    return y_test_labels, y_pred_labels
 
 
-def train_sequential_model(X_test, y_test, chosen_model, class_labels):
-    """
-    This function is used to train the sequential models. If train_model == True, then it trains the model using
-    X-train, y_train, else it loads the model from the existing file. Then, it evaluates the model and prints the
-    classification report.
-    :return: y_test_labels, y_pred_labels containing the actual y_labels of test set and the predicted ones.
-    """
-    if not os.path.exists('saved_models'):
-        os.makedirs('saved_models')
+def retrain_model(chosen_model):
 
-    file_name = f'saved_models/acc_domino_{chosen_model}_model.h5'
+    pretrained_model = load_model(f"saved_models/acc_domino_{chosen_model}_model.h5")
 
-    model = keras.models.load_model(file_name)
+    model_without_last_layer = Model(inputs=pretrained_model.input, outputs=pretrained_model.layers[-2].output)
 
-    # print(model.summary())
+    # Fine-tune pretrained model
+    new_layer = Dense(y_train.shape[1], activation='softmax')(model_without_last_layer.output)
+    new_model = Model(inputs=model_without_last_layer.input, outputs=new_layer)
 
-    y_pred = model.predict(X_test)
+    # Compile the new model
+    new_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    new_model.fit(X_train, y_train, validation_split=0.2, epochs=10, batch_size=32, verbose=2)
+    new_model.save(f'models/acc_retrained_{chosen_model}_model.h5')
+    # new_model.summary()
+
+    loss, accuracy = new_model.evaluate(X_train, y_train)
+    print("Train Accuracy: %d%%, Train Loss: %d%%" % (100*accuracy, 100*loss))
+
+    y_pred = new_model.predict(X_test)
     y_pred_labels = np.argmax(y_pred, axis=1)
     y_test_labels = np.argmax(y_test, axis=1)
     accuracy = accuracy_score(y_test_labels, y_pred_labels)
@@ -255,7 +286,7 @@ if __name__ == '__main__':
     time_required_ms = 3500
     samples_required = int(time_required_ms * frequency / 1000)
 
-    path = "../pamap2_dataset/data.csv"
+    path = "../pamap2_dataset/data_pamap2.csv"
     class_labels = ['Cycling', 'Lying', 'Running', 'Sitting', 'Standing', 'Walking']
 
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru']
@@ -267,33 +298,7 @@ if __name__ == '__main__':
     for chosen_model in models:
         print(f'{chosen_model=}')
 
-        pretrained_model = load_model(f"models/acc_domino_{chosen_model}_model.h5")
-
-        model_without_last_layer = Model(inputs=pretrained_model.input, outputs=pretrained_model.layers[-2].output)
-
-        # Fine-tune pretrained model
-        new_layer = Dense(y_train.shape[1], activation='softmax')(model_without_last_layer.output)
-        new_model = Model(inputs=model_without_last_layer.input, outputs=new_layer)
-
-        # Compile the new model
-        new_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        new_model.fit(X_train, y_train, validation_split=0.2, epochs=10, batch_size=32, verbose=2)
-        new_model.save(f'models/acc_{chosen_model}_transferred_model.h5')
-        # new_model.summary()
-
-        loss, accuracy = new_model.evaluate(X_train, y_train)
-        print("Train Accuracy: %d%%, Train Loss: %d%%" % (100*accuracy, 100*loss))
-
-        y_pred = new_model.predict(X_test)
-        y_pred_labels = np.argmax(y_pred, axis=1)
-        y_test_labels = np.argmax(y_test, axis=1)
-        accuracy = accuracy_score(y_test_labels, y_pred_labels)
-        f1 = f1_score(y_test_labels, y_pred_labels, average='weighted')
-        print("Test Accuracy: %d%%" % (100*accuracy))
-        print("Test F1 Score: %d%%" % (100*f1))
-
-        report = classification_report(y_test_labels, y_pred_labels, target_names=class_labels)
-        print(report)
+        y_test_labels, y_pred_labels = retrain_model(chosen_model)
 
         plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
 
