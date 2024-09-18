@@ -79,11 +79,11 @@ def train_test_split(path):
                         'MOVING_BY_CAR': 6, 'RUNNING': 7, 'SITTING': 8, 'SITTING_ON_TRANSPORT': 9, 'STAIRS_DOWN': 10,
                         'STAIRS_UP': 11, 'STANDING': 12, 'STANDING_ON_TRANSPORT': 13, 'WALKING': 14, 'TRANSITION': 15}
 
-    data['activityId'] = data['activity'].map(letter_to_number)
+    data['activity'] = data['activity'].map(letter_to_number)
 
     undesired_activities = [3, 4, 9, 11, 13, 15]
-    data = data[~data['activityId'].isin(undesired_activities)]
-    unique_activities = data['activityId'].unique()
+    data = data[~data['activity'].isin(undesired_activities)]
+    unique_activities = data['activity'].unique()
     data = data.iloc[::4, :]
 
     columns_to_scale = ['accel_x', 'accel_y', 'accel_z']
@@ -106,9 +106,9 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     the data using OneHotEncoder.
     :returns: the preprocessed data that can be used by the models (X_train, y_train, X_test, y_test)
     """
-    X_train, y_train = create_sequences(train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activityId'],
+    X_train, y_train = create_sequences(train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activity'],
                                         timesteps, unique_activities)
-    X_test, y_test = create_sequences(test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activityId'],
+    X_test, y_test = create_sequences(test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activity'],
                                       timesteps, unique_activities)
 
     np.random.seed(42)
@@ -143,8 +143,8 @@ def display_data(data, unique_activities):
 
     for activity in unique_activities:
 
-        subset = data[data['activityId'] == activity].iloc[200:400]
-        subset = subset.drop(['activityId'], axis=1)
+        subset = data[data['activity'] == activity].iloc[200:400]
+        subset = subset.drop(['activity'], axis=1)
         subset = subset.drop(subset.columns[0], axis=1)
 
         subset.plot(subplots=True, figsize=(10, 10))
@@ -401,10 +401,10 @@ if __name__ == '__main__':
 
     # Implemented models
     models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
+    train_set, test_set, unique_activities = train_test_split(path)
 
     for chosen_model in models:
         print(f'{chosen_model=}')
-        train_set, test_set, unique_activities = train_test_split(path)
 
         if chosen_model == 'rf' or chosen_model == 'knn':
             X_train, y_train, X_test, y_test = extract_features(train_set, test_set, frequency, samples_required, train_features=True)
