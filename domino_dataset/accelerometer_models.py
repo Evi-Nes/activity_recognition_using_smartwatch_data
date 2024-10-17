@@ -6,6 +6,7 @@ import os
 import contextlib
 import pickle 
 import tsfel
+import tensorflow as tf
 
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -149,8 +150,8 @@ def display_data(data, unique_activities):
 
         subset.plot(subplots=True, figsize=(10, 10))
         plt.xlabel('Time')
-        plt.savefig(f'plots/acc_scaled_data.png')
-        plt.show()
+        plt.savefig(f'plots/acc_scaled_{activity}_data.png')
+        # plt.show()
 
 
 def create_sequential_model(X_train, y_train, chosen_model, input_shape, file_name):
@@ -266,7 +267,9 @@ def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class
 
 def extract_features(train_data, test_data, frequency, samples_required, train_features):
     """
-    This function uses the tsfel package to extract statistical features from the data and preprocessed tha data.
+    This function uses the tsfel package to extract statistical features from the data and preprocessed the data.
+    If train_features == True, then it extracts statistical features from the data, else it loads the features from the
+    existing file.
     :returns: the extracted features (X_train_features, y_train_features, X_test_features, y_test_features)
     """
     X_train_sig, y_train_sig = train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activity']
@@ -305,9 +308,7 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
     X_test_features = selector.transform(X_test_features)
 
     cols_idxs = selector.get_support(indices=True)
-    print('len cols idxs', len(cols_idxs))
     X_train_columns = X_train_columns.iloc[:, cols_idxs]
-    print('Selected Features', *X_train_columns.columns)
 
     scaler = preprocessing.StandardScaler()
     X_train_features = scaler.fit_transform(X_train_features)
@@ -407,12 +408,12 @@ if __name__ == '__main__':
         print(f'{chosen_model=}')
 
         if chosen_model == 'rf' or chosen_model == 'knn':
-            X_train, y_train, X_test, y_test = extract_features(train_set, test_set, frequency, samples_required, train_features=True)
+            X_train, y_train, X_test, y_test = extract_features(train_set, test_set, frequency, samples_required, train_features=False)
             y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                               class_labels, train_model=True)
+                                                               class_labels, train_model=False)
         else:
             X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
             y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                                  class_labels, train_model=True)
+                                                                  class_labels, train_model=False)
 
-        plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
+        # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)

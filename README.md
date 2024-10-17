@@ -28,33 +28,31 @@ python preprocess_dataset.py
 
 Before running the files make sure you have all the necessary requirements, which can be found in the **requirements.txt** file.
 
-This is what your processed data should look like. Using the sliding windows method, with overlapping, we split them to 
+### The Data
+This is what your processed data should look like. Using the sliding windows method, with overlap, we split them to 
 smaller timeseries, as shown below.
+
 ![screenshot](media/sliding_windows.png)
 
-I implemented three types of models depending on the type of data I use each time. I have models using only accelerometer data,
-models using only gyroscope data and models using both types of data. Below I show the train and test results, comparing the 
+### The Models
+I implemented three types of models depending on the type of data I use each time. I have models using **only accelerometer data**,
+models using **only gyroscope data** and models using **both types of data**. Below I show the train and test results from my analysis, comparing the 
 performances of the models for each type of data. It's clear that the accelerometer data are the ones with the highest results
-on the test phase of our analysis and there are the ones I recommend using. The combined data have also high results and should
+on the test phase and are the ones I recommend using. The combined data have also high results and could
 be considered a good alternative.
 
-### **Train results:**
+#### **Train results:**
 ![screnshot](media/train_acc.png)
 
-### **Test results:**
+#### **Test results:**
 ![screnshot](media/test_acc.png)
 
-### Chosen Models
-In the image below are shown the different metrics as they result from our analysis for the accelerometer data. This helps us choose the models which are the most
+### Final Models
+In the image below are shown the different metrics as they result from the analysis for the accelerometer data. This helps us choose the models which are the most
 suitable for our needs and capture the best the patterns of our data. Those are the **GRU-2, CNN-LSTM, CNN-GRU, CNN-CNN-
 LSTM**, and **CNN-CNN-GRU**. 
 
 ![screnshot](media/chart_acc.png)
 
-### Frequency test
-Furthermore, I performed some test concerning the frequency of the data. The initial frequency was 100Hz but for the needs
-of our problem I had to decrease it to 25Hz. However, it is necessary to understand
-the importance of the frequency of the data and its impact on the results.
 
-![screnshot](media/freaquency_test.png)
 
