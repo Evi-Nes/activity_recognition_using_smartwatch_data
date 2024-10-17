@@ -38,16 +38,23 @@ performances of the models for each type of data. It's clear that the accelerome
 on the test phase of our analysis and there are the ones I recommend using. The combined data have also high results and should
 be considered a good alternative.
 
-**Train results:**
+### **Train results:**
 ![screnshot](media/train_acc.png)
 
-**Test results:**
+### **Test results:**
 ![screnshot](media/test_acc.png)
 
-
+### Chosen Models
 In the image below are shown the different metrics as they result from our analysis for the accelerometer data. This helps us choose the models which are the most
-suitable for our needs and capture the best the patterns of our data. Those are **GRU-2, CNN-LSTM, CNN-GRU, CNN-CNN-
+suitable for our needs and capture the best the patterns of our data. Those are the **GRU-2, CNN-LSTM, CNN-GRU, CNN-CNN-
 LSTM**, and **CNN-CNN-GRU**. 
+
 ![screnshot](media/chart_acc.png)
 
-Furthermore, I performed some test 
+### Frequency test
+Furthermore, I performed some test concerning the frequency of the data. The initial frequency was 100Hz but for the needs
+of our problem I had to decrease it to 25Hz. However, it is necessary to understand
+the importance of the frequency of the data and its impact on the results.
+
+![screnshot](media/freaquency_test.png)
+
