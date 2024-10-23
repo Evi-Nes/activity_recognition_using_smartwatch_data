@@ -35,7 +35,7 @@ for folder in tqdm(os.listdir(domino_folder)):
             # Filter to keep only the rows where ts is within the range [ts_start, ts_end]
             result = cross_joined[(cross_joined['ts'] >= cross_joined['ts_start']) & (cross_joined['ts'] <= cross_joined['ts_end'])]
 
-            merged_data = pd.merge_asof(result, smartwatch_gyro, on='ts', direction='nearest', tolerance=5)
+            merged_data = pd.merge_asof(result, smartwatch_gyro, on='ts', direction='nearest', tolerance=20)
 
             # merged_data = merged_data.merge(smartwatch_gyro, on='ts', how='inner')
 
@@ -62,8 +62,16 @@ if merged_files:
 
     if all_data:
         combined_df = pd.concat(all_data, ignore_index=True)
+
+        # Check and remove Nan values
+        missing_values = combined_df.isnull().sum()
+        print("Missing values in each column:\n", missing_values)
+        combined_df_cleaned = combined_df.dropna()
+        print("Original DataFrame shape:", combined_df.shape)
+        print("Cleaned DataFrame shape:", combined_df_cleaned.shape)
+
         combined_file_path = os.path.join(domino_folder, 'data_domino.csv')
-        combined_df.to_csv('data.csv', index=False)
+        combined_df_cleaned.to_csv('data_domino.csv', index=False)
         print(f"Saved final combined data to {combined_file_path}")
 
     else:
