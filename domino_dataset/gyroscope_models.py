@@ -95,8 +95,8 @@ def train_test_split(path):
     # display_data(data, unique_activities)
 
     size = len(data)
-    train_data = data.iloc[0:int(size*0.8)]
-    test_data = data.iloc[int(size*0.8):]
+    train_data = data.iloc[0:int(size*0.7)]
+    test_data = data.iloc[int(size*0.7):]
 
     return train_data, test_data, unique_activities
 
@@ -146,11 +146,10 @@ def display_data(data, unique_activities):
 
         subset = data[data['activity'] == activity].iloc[200:400]
         subset = subset.drop(['activity'], axis=1)
-        subset = subset.drop(subset.columns[0], axis=1)
 
         subset.plot(subplots=True, figsize=(10, 10))
         plt.xlabel('Time')
-        plt.savefig(f'plots/gyro_scaled_{activity}_data.png')
+        plt.savefig(f'plots/scaled_{activity}_data.png')
         # plt.show()
 
 
