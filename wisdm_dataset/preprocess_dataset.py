@@ -33,7 +33,7 @@ if all_data:
     combined_df = pd.concat(all_data, ignore_index=True)
     combined_df.to_csv('wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset/wisdm-dataset/raw/watch/accel_data.csv', index=False)
 
-print('Accel data ok')
+print('Accelerometer data done')
 
 # Gyro data
 merged_files = []
@@ -63,7 +63,7 @@ if all_data:
     combined_df = pd.concat(all_data, ignore_index=True)
     combined_df.to_csv('wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset/wisdm-dataset/raw/watch/gyro_data.csv', index=False)
 
-print('Gyro data ok')
+print('Gyroscope data done')
 
 # Final Merge
 smartwatch_acc = pd.read_csv('wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset/wisdm-dataset/raw/watch/accel_data.csv')
