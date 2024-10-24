@@ -245,7 +245,7 @@ def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class
     else:
         model = keras.models.load_model(file_name)
 
-    print(model.summary())
+    # print(model.summary())
 
     loss, accuracy = model.evaluate(X_train, y_train)
     print("Train Accuracy: %d%%, Train Loss: %d%%" % (100*accuracy, 100*loss))

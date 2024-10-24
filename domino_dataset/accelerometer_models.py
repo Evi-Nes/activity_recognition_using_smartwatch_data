@@ -408,12 +408,12 @@ if __name__ == '__main__':
         print(f'{chosen_model=}')
 
         if chosen_model == 'rf' or chosen_model == 'knn':
-            X_train, y_train, X_test, y_test = extract_features(train_set, test_set, frequency, samples_required, train_features=False)
+            X_train, y_train, X_test, y_test = extract_features(train_set, test_set, frequency, samples_required, train_features=True)
             y_test_labels, y_pred_labels = train_feature_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                               class_labels, train_model=False)
+                                                               class_labels, train_model=True)
         else:
             X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
             y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
-                                                                  class_labels, train_model=False)
+                                                                  class_labels, train_model=True)
 
         # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
