@@ -1,7 +1,7 @@
 import os
 import pandas as pd
-from tqdm import tqdm
-import re
+# from tqdm import tqdm
+# import re
 
 # Define the path to the DOMINO folder
 dat_directory = 'PAMAP2_Dataset/Protocol'
@@ -26,6 +26,7 @@ for file in dat_files:
     selected_columns = df.iloc[:, [0, 1, 4, 5, 6, 10, 11, 12]]
 
     merged_files.append(selected_columns)
+    print(f'Merged {file}')
 
 # Concatenate all the DataFrames in the list into a single DataFrame
 combined_df = pd.concat(merged_files, ignore_index=True)
