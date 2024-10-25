@@ -49,8 +49,11 @@ be considered a good alternative.
 
 ### Final Models
 In the image below are shown the different metrics as they result from the analysis for the accelerometer data. This helps us choose the models which are the most
-suitable for our needs and capture the best the patterns of our data. Those are the **GRU-2, CNN-LSTM, CNN-GRU, CNN-CNN-
-LSTM**, and **CNN-CNN-GRU**. 
+suitable for our needs and capture the best the patterns of our data. 
+
+Those are the **GRU-2, CNN-LSTM, CNN-GRU, CNN-CNN-LSTM**, and **CNN-CNN-GRU** with train accuracy between **94-97%** and 
+test accuracy between **93-95%**. The f1 score and precision
+metrics have similar results varying between **93-96%** and **95-95%** accordingly.
 
 ![screnshot](media/chart_acc.png)
 
