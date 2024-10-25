@@ -93,7 +93,7 @@ def train_test_split(path):
     unique_activities = data['activity'].unique()
     data = data.iloc[::4, :]
 
-    columns_to_scale = ['gyro_x', 'gyro_y', 'gyro_z']
+    columns_to_scale = ['accel_x', 'accel_y', 'accel_z', 'gyro_x', 'gyro_y', 'gyro_z']
     scaler = RobustScaler()
     data[columns_to_scale] = scaler.fit_transform(data[columns_to_scale])
 
@@ -113,10 +113,10 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     the data using OneHotEncoder.
     :returns: the preprocessed data that can be used by the models (X_train, y_train, X_test, y_test)
     """
-    X_train, y_train = create_sequences(train_data[['gyro_x', 'gyro_y', 'gyro_z']], train_data['activity'],
-                                        timesteps, unique_activities)
-    X_test, y_test = create_sequences(test_data[['gyro_x', 'gyro_y', 'gyro_z']], test_data['activity'],
-                                      timesteps, unique_activities)
+    X_train, y_train = create_sequences(train_data[['accel_x', 'accel_y', 'accel_z', 'gyro_x', 'gyro_y', 'gyro_z']],
+                                        train_data['activity'], timesteps, unique_activities)
+    X_test, y_test = create_sequences(test_data[['accel_x', 'accel_y', 'accel_z', 'gyro_x', 'gyro_y', 'gyro_z']],
+                                      test_data['activity'], timesteps, unique_activities)
 
     np.random.seed(42)
     random = np.arange(0, len(y_train))
@@ -244,7 +244,7 @@ def train_sequential_model(X_train, y_train, X_test, y_test, chosen_model, class
     if not os.path.exists('saved_models'):
         os.makedirs('saved_models')
 
-    file_name = f'saved_models/gyro_{chosen_model}_model.h5'
+    file_name = f'saved_models/comb_{chosen_model}_model.h5'
 
     if train_model:
         input_shape = (X_train.shape[1], X_train.shape[2])
@@ -276,8 +276,8 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
     This function uses the tsfel package to extract statistical features from the data and preprocessed tha data.
     :returns: the extracted features (X_train_features, y_train_features, X_test_features, y_test_features)
     """
-    X_train_sig, y_train_sig = train_data[['gyro_x', 'gyro_y', 'gyro_z']], train_data['activity']
-    X_test_sig, y_test_sig = test_data[['gyro_x', 'gyro_y', 'gyro_z']], test_data['activity']
+    X_train_sig, y_train_sig = train_data[['accel_x', 'accel_y', 'accel_z', 'gyro_x', 'gyro_y', 'gyro_z']], train_data['activity']
+    X_test_sig, y_test_sig = test_data[['accel_x', 'accel_y', 'accel_z', 'gyro_x', 'gyro_y', 'gyro_z']], test_data['activity']
 
     if train_features:
         if not os.path.exists('saved_features'):
@@ -286,11 +286,11 @@ def extract_features(train_data, test_data, frequency, samples_required, train_f
         cfg_file = tsfel.get_features_by_domain('statistical')
         X_train_features = tsfel.time_series_features_extractor(cfg_file, X_train_sig, fs=frequency, window_size=samples_required)
         X_test_features = tsfel.time_series_features_extractor(cfg_file, X_test_sig, fs=frequency, window_size=samples_required)
-        X_train_features.to_csv(f'saved_features/X_train_gyro.csv', index=False)
-        X_test_features.to_csv(f'saved_features/X_test_gyro.csv', index=False)
+        X_train_features.to_csv(f'saved_features/X_train_comb.csv', index=False)
+        X_test_features.to_csv(f'saved_features/X_test_comb.csv', index=False)
     else:
-        X_train_features = pd.read_csv(f'saved_features/X_train_gyro.csv')
-        X_test_features = pd.read_csv(f'saved_features/X_test_gyro.csv')
+        X_train_features = pd.read_csv(f'saved_features/X_train_comb.csv')
+        X_test_features = pd.read_csv(f'saved_features/X_test_comb.csv')
 
     X_train_columns = X_train_features.copy(deep=True)
     y_train_features = y_train_sig[::samples_required]
@@ -337,10 +337,10 @@ def train_feature_model(X_train, y_train, X_test, y_test, chosen_model, class_la
         elif chosen_model == 'knn':
             classifier = KNeighborsClassifier(n_neighbors=7, metric='manhattan', weights='uniform')
             classifier.fit(X_train, y_train.ravel())
-        file = open(f'saved_models/gyro_{chosen_model}_model.pkl', 'wb')
+        file = open(f'saved_models/comb_{chosen_model}_model.pkl', 'wb')
         pickle.dump(classifier, file)
     else:
-        file = open(f'saved_models/gyro_{chosen_model}_model.pkl', 'rb')
+        file = open(f'saved_models/comb_{chosen_model}_model.pkl', 'rb')
         classifier = pickle.load(file)
 
     classifier.fit(X_train, y_train.ravel())
@@ -372,10 +372,10 @@ def plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_mod
     for norm_value in normalize_cm:
         if norm_value == 'true':
             format = '.2f'
-            plot_name = f'gyro_{chosen_model}_cm_norm.png'
+            plot_name = f'comb_{chosen_model}_cm_norm.png'
         else:
             format = 'd'
-            plot_name = f'gyro_{chosen_model}_cm.png'
+            plot_name = f'comb_{chosen_model}_cm.png'
 
         disp = ConfusionMatrixDisplay.from_predictions(
             y_test_labels, y_pred_labels,
