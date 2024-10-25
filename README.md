@@ -48,8 +48,8 @@ be considered a good alternative.
 ![screnshot](media/test_acc.png)
 
 ### Final Models
-In the image below are shown the different metrics as they result from the analysis for the accelerometer data. This helps us choose the models which are the most
-suitable for our needs and capture the best the patterns of our data. 
+In the image below are shown the different metrics as they result from the analysis for the accelerometer data from the DOMINO dataset. 
+This helps us choose the models which are the most suitable for our needs and capture the best the patterns of our data. 
 
 Those are the **GRU-2, CNN-LSTM, CNN-GRU, CNN-CNN-LSTM**, and **CNN-CNN-GRU** with train accuracy between **94-97%** and 
 test accuracy between **93-95%**. The f1 score and precision
