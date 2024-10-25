@@ -4,13 +4,10 @@ import matplotlib.pyplot as plt
 import keras
 import os
 import contextlib
-import pickle
 
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
-from keras.src.layers import MaxPooling1D, Conv1D
 
-from sklearn.feature_selection import VarianceThreshold
 from sklearn import preprocessing
 
 # Redirect stderr to /dev/null to silence warnings
@@ -100,8 +97,11 @@ def train_sequential_model(X_test, y_test, chosen_model, class_labels):
     classification report.
     :return: y_test_labels, y_pred_labels containing the actual y_labels of test set and the predicted ones.
     """
-    if not os.path.exists('saved_models'):
-        os.makedirs('saved_models')
+    try:
+        if not os.path.exists('saved_models'):
+            raise FileNotFoundError
+    except FileNotFoundError:
+        raise Exception('There are no saved models. You need to run the pretrain_domino_models.py file first')
 
     file_name = f'saved_models/acc_domino_{chosen_model}_model.h5'
 
@@ -166,14 +166,13 @@ if __name__ == '__main__':
     path = "../pamap2_dataset/data_pamap2.csv"
     class_labels = ['lying', 'sitting', 'standing', 'walking', 'running', 'cycling']
 
-    # Choose the model
-    models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn', 'rf', 'knn']
-    models = models[0:2]
+    # Implemented models
+    models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru']
+    test_set, unique_activities = train_test_split(path)
 
     for chosen_model in models:
         print(f'{chosen_model=}')
 
-        test_set, unique_activities = train_test_split(path)
         X_test, y_test = preprocess_data(test_set, samples_required, unique_activities)
         y_test_labels, y_pred_labels = train_sequential_model(X_test, y_test, chosen_model, class_labels)
 

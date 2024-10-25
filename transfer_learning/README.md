@@ -5,5 +5,7 @@ from other sensors (**apply_domino_models.py**).
 2) I retrain the last layers of the models and then use the data from the pamap2 dataset, in order to fine-tune the models
 and improve their performance. (**retrain_domino_models.py**).
 
-It's necessary to run the **pretrain_domino_models.py** file to create and store the initial models. Then, depending which
+### Important note
+It's necessary to run the **preprocess_dataset.py** files found in the domino_dataset and pamap2_dataset folders in order to prepare the data
+and then the **pretrain_domino_models.py** file to create and store the initial models. Then, depending which
 approach you choose, you run the corresponding file.

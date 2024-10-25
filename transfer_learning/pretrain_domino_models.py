@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import keras
 import os
 import contextlib
-import pickle
 
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -49,11 +48,11 @@ def train_test_split(path):
                         'MOVING_BY_CAR': 6, 'RUNNING': 7, 'SITTING': 8, 'SITTING_ON_TRANSPORT': 9, 'STAIRS_DOWN': 10,
                         'STAIRS_UP': 11, 'STANDING': 12, 'STANDING_ON_TRANSPORT': 13, 'WALKING': 14, 'TRANSITION': 15}
 
-    data['activityId'] = data['activity'].map(letter_to_number)
+    data['activity'] = data['activity'].map(letter_to_number)
 
     undesired_activities = [1, 3, 4, 6, 9, 10, 11, 13, 15]
-    data = data[~data['activityId'].isin(undesired_activities)]
-    unique_activities = data['activityId'].unique()
+    data = data[~data['activity'].isin(undesired_activities)]
+    unique_activities = data['activity'].unique()
     data = data.iloc[::4, :]
 
     columns_to_scale = ['accel_x', 'accel_y', 'accel_z']
@@ -73,9 +72,9 @@ def preprocess_data(train_data, test_data, timesteps, unique_activities):
     the data using OneHotEncoder.
     :returns: the preprocessed data that can be used by the models (X_train, y_train, X_test, y_test)
     """
-    X_train, y_train = create_sequences(train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activityId'],
+    X_train, y_train = create_sequences(train_data[['accel_x', 'accel_y', 'accel_z']], train_data['activity'],
                                         timesteps, unique_activities)
-    X_test, y_test = create_sequences(test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activityId'],
+    X_test, y_test = create_sequences(test_data[['accel_x', 'accel_y', 'accel_z']], test_data['activity'],
                                       timesteps, unique_activities)
 
     np.random.seed(42)
@@ -145,25 +144,6 @@ def create_sequential_model(X_train, y_train, chosen_model, input_shape, file_na
         model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
         model.add(MaxPooling1D(pool_size=4))
         model.add(keras.layers.GRU(units=64, return_sequences=False, input_shape=input_shape))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == 'cnn_cnn':
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=4))
-        model.add(keras.layers.Dropout(rate=0.4))
-        model.add(keras.layers.Flatten())
-        model.add(keras.layers.Dense(64, activation='relu'))
-        model.add(keras.layers.Dropout(rate=0.4))
-    elif chosen_model == '2cnn_2cnn':
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu', input_shape=input_shape))
-        model.add(Conv1D(filters=32, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=2))
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu'))
-        model.add(Conv1D(filters=64, kernel_size=11, activation='relu'))
-        model.add(MaxPooling1D(pool_size=2))
-        model.add(keras.layers.Dropout(rate=0.4))
-        model.add(keras.layers.Flatten())
-        model.add(keras.layers.Dense(64, activation='relu'))
         model.add(keras.layers.Dropout(rate=0.4))
 
     model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
@@ -255,18 +235,17 @@ if __name__ == '__main__':
     path = "../domino_dataset/data_domino.csv"
     class_labels = ['Cycling', 'Lying', 'Running', 'Sitting', 'Standing', 'Walking']
 
-    # Choose the model
-    models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru', 'cnn_cnn', '2cnn_2cnn']
-    models = models[0:2]
+    # Implemented models
+    models = ['lstm_1', 'gru_1', 'lstm_2', 'gru_2', 'cnn_lstm', 'cnn_gru', 'cnn_cnn_lstm', 'cnn_cnn_gru']
+    train_set, test_set, unique_activities = train_test_split(path)
 
     for chosen_model in models:
         print(f'{chosen_model=}')
 
-        train_set, test_set, unique_activities = train_test_split(path)
         X_train, y_train, X_test, y_test = preprocess_data(train_set, test_set, samples_required, unique_activities)
         y_test_labels, y_pred_labels = train_sequential_model(X_train, y_train, X_test, y_test, chosen_model,
                                                               class_labels, train_model=True)
 
         # Uncomment if you want to create the confusion matrices for the results
-        plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
+        # plot_confusion_matrix(y_test_labels, y_pred_labels, class_labels, chosen_model)
 
